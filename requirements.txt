@@ -1,0 +1,6 @@
+# edge-tts e yt-dlp falam com servicos externos (Microsoft / YouTube) e quebram
+# quando ficam velhos (403). Se aparecer erro 403, rode:
+#   venv\Scripts\python.exe -m pip install -U edge-tts yt-dlp
+edge-tts>=7.2.8
+Flask>=3.1.1
+yt-dlp>=2026.7.4

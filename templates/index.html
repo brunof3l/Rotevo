@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Script Video Maker</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel-2:#1e222b; --line:#2a2f3a;
+    --text:#e8eaf0; --muted:#98a0b3; --accent:#4ade80; --accent-2:#22c55e; --danger:#f87171;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 "Segoe UI",system-ui,sans-serif}
+  header{padding:22px 28px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:14px}
+  header .off{margin-left:auto;color:var(--muted);font-size:13px;cursor:pointer;background:none;
+    border:1px solid var(--line);border-radius:7px;padding:7px 12px;width:auto;margin-top:0}
+  header .off:hover{color:var(--danger);border-color:var(--danger);background:none}
+  header h1{margin:0;font-size:20px;letter-spacing:.3px}
+  header span{color:var(--muted);font-size:13px}
+  main{display:grid;grid-template-columns:1.35fr .85fr;gap:22px;padding:22px 28px;max-width:1400px}
+  @media (max-width:1000px){main{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .card h2{margin:0 0 14px;font-size:14px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+  label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+  textarea,input[type=text],select{width:100%;background:var(--panel-2);color:var(--text);
+    border:1px solid var(--line);border-radius:8px;padding:11px 12px;font:inherit;outline:none}
+  textarea{min-height:340px;resize:vertical;line-height:1.6}
+  textarea:focus,input:focus,select:focus{border-color:var(--accent)}
+  .row{display:flex;gap:14px}.row>*{flex:1}
+  .meta{display:flex;gap:18px;margin-top:10px;font-size:13px;color:var(--muted)}
+  .meta b{color:var(--text);font-weight:600}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .check{display:flex;align-items:center;gap:9px;margin:12px 0;font-size:14px;color:var(--text)}
+  .check input{accent-color:var(--accent);width:16px;height:16px}
+  button{width:100%;margin-top:18px;padding:13px;border:0;border-radius:9px;background:var(--accent-2);
+    color:#06210f;font:600 15px/1 "Segoe UI",sans-serif;cursor:pointer}
+  button:hover{background:var(--accent)}
+  button:disabled{background:#2a2f3a;color:var(--muted);cursor:not-allowed}
+  .bar{height:9px;background:var(--panel-2);border-radius:99px;overflow:hidden;margin:6px 0 10px}
+  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#22c55e,#4ade80);transition:width .4s}
+  #step{font-size:13px;color:var(--muted);min-height:20px}
+  #log{margin-top:12px;max-height:190px;overflow:auto;font:12px/1.7 Consolas,monospace;color:var(--muted);
+    background:var(--panel-2);border-radius:8px;padding:10px 12px;white-space:pre-wrap}
+  video{width:100%;border-radius:10px;margin-top:12px;background:#000;max-height:520px}
+  a.dl{display:inline-block;margin-top:10px;color:var(--accent);font-size:14px}
+  .hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6}
+  .err{color:var(--danger);font-size:13px;margin-top:10px}
+  ul.files{list-style:none;padding:0;margin:8px 0 0;font-size:13px}
+  ul.files li{padding:6px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
+  ul.files a{color:var(--text);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  ul.files span{color:var(--muted);flex:none}
+  .hidden{display:none}
+  #offline{display:none;margin:0;padding:16px 28px;background:#3a1d1d;border-bottom:1px solid #6b2b2b;
+    color:#ffd7d7;font-size:14px;line-height:1.7}
+  #offline code{background:#00000055;padding:2px 7px;border-radius:5px;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Script Video Maker</h1>
+  <span>roteiro colado &rarr; narracao com IA + gameplay de fundo + legendas</span>
+  <button class="off" id="shutdown" title="Encerra o servidor que roda escondido">Desligar servidor</button>
+</header>
+
+<div id="offline">
+  <b>Esta pagina foi aberta como arquivo, sem o servidor rodando &mdash; assim nada funciona.</b><br>
+  Feche esta aba, rode <code>run.bat</code> na pasta ScriptVideoMaker e use o endereco
+  <code>http://127.0.0.1:5000</code> que abre sozinho no navegador.
+</div>
+
+<main>
+  <section class="card">
+    <h2>Roteiro</h2>
+    <input type="text" id="title" placeholder="Titulo do video (vira o nome do arquivo)">
+    <label for="script">Cole aqui a historia inteira</label>
+    <textarea id="script" placeholder="Cole seu roteiro... Cada frase vira um bloco de narracao e uma legenda."></textarea>
+    <div class="meta">
+      <span><b id="chars">0</b> caracteres</span>
+      <span><b id="blocks">0</b> blocos</span>
+      <span>~<b id="dur">0:00</b> de video</span>
+    </div>
+    <div class="hint">Anotacoes entre [colchetes] ou (parenteses), links e marcacao de markdown sao removidos antes de narrar.</div>
+  </section>
+
+  <section>
+    <div class="card">
+      <h2>Voz e video</h2>
+      <label for="voice">Voz da narracao</label>
+      <select id="voice"><option value="{{ config.tts.voice }}">{{ config.tts.voice }}</option></select>
+
+      <div class="row">
+        <div>
+          <label for="rate">Velocidade <b id="rateVal">{{ config.tts.rate }}</b></label>
+          <input type="range" id="rate" min="-30" max="60" step="2" value="8">
+        </div>
+        <div>
+          <label for="pitch">Tom <b id="pitchVal">+0Hz</b></label>
+          <input type="range" id="pitch" min="-12" max="12" step="1" value="0">
+        </div>
+      </div>
+
+      <label for="background">Gameplay de fundo</label>
+      <select id="background">
+        {% for bg in backgrounds %}
+        <option value="{{ bg.key }}" {% if bg.key == config.background.choice %}selected{% endif %}>
+          {{ bg.label }}{% if not bg.downloaded %} - baixa na 1a vez{% endif %}
+        </option>
+        {% endfor %}
+      </select>
+
+      <div class="check"><input type="checkbox" id="captions" checked><label for="captions" style="margin:0">Legendas na tela</label></div>
+      <div class="check"><input type="checkbox" id="uppercase"><label for="uppercase" style="margin:0">Legendas em MAIUSCULAS</label></div>
+      <label for="fontSize">Tamanho da legenda <b id="fontVal">76</b></label>
+      <input type="range" id="fontSize" min="48" max="110" step="2" value="76">
+      <div class="check"><input type="checkbox" id="saveDefaults"><label for="saveDefaults" style="margin:0">Salvar estas escolhas como padrao</label></div>
+
+      <button id="go">Gerar video</button>
+      <div class="err hidden" id="err"></div>
+    </div>
+
+    <div class="card hidden" id="progressCard" style="margin-top:22px">
+      <h2>Progresso</h2>
+      <div class="bar"><i id="barFill"></i></div>
+      <div id="step"></div>
+      <div id="log"></div>
+      <video id="player" class="hidden" controls></video>
+      <a class="dl hidden" id="dl" download>Baixar o mp4</a>
+    </div>
+
+    <div class="card" style="margin-top:22px">
+      <h2>Videos gerados</h2>
+      <ul class="files" id="files"><li><span>nenhum ainda</span></li></ul>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let pollTimer = null;
+
+// Aberto como file:// (sem o Flask) -> avisa em vez de falhar em silencio.
+if (location.protocol === 'file:') {
+  document.getElementById('offline').style.display = 'block';
+  document.getElementById('go').disabled = true;
+}
+
+function fmt(seconds){
+  const m = Math.floor(seconds / 60), s = Math.round(seconds % 60);
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+// ---- desligar servidor ----
+$('shutdown').addEventListener('click', async () => {
+  if (!confirm('Desligar o servidor? Voce pode religar pelo atalho a qualquer momento.')) return;
+  try {
+    const res = await fetch('/api/shutdown', {method:'POST'});
+    const data = await res.json();
+    if (data.error) { alert(data.error); return; }
+    document.body.innerHTML = '<p style="padding:40px;font-size:16px">Servidor desligado. Pode fechar esta aba. Para voltar, use o atalho <b>Script Video Maker</b>.</p>';
+  } catch (e) { alert('Nao consegui falar com o servidor (talvez ja esteja desligado).'); }
+});
+
+// ---- contadores do roteiro (com debounce) ----
+let previewTimer = null;
+$('script').addEventListener('input', () => {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(async () => {
+    const res = await fetch('/api/preview', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({script: $('script').value})
+    });
+    const data = await res.json();
+    $('chars').textContent = data.chars;
+    $('blocks').textContent = data.blocks;
+    $('dur').textContent = fmt(data.estimated_seconds);
+  }, 350);
+});
+
+// ---- sliders ----
+$('rate').addEventListener('input', e => $('rateVal').textContent = (e.target.value>=0?'+':'') + e.target.value + '%');
+$('pitch').addEventListener('input', e => $('pitchVal').textContent = (e.target.value>=0?'+':'') + e.target.value + 'Hz');
+$('fontSize').addEventListener('input', e => $('fontVal').textContent = e.target.value);
+
+// ---- lista de vozes ----
+(async () => {
+  const res = await fetch('/api/voices?lang=pt');
+  const data = await res.json();
+  if (!data.voices || !data.voices.length) return;
+  const current = $('voice').value;
+  $('voice').innerHTML = data.voices
+    .map(v => `<option value="${v.name}" ${v.name===current?'selected':''}>${v.name} - ${v.gender}</option>`)
+    .join('');
+})();
+
+// ---- lista de videos ja gerados ----
+async function refreshFiles(){
+  const res = await fetch('/api/outputs');
+  const data = await res.json();
+  $('files').innerHTML = data.videos.length
+    ? data.videos.map(v => `<li><a href="/videos/${encodeURIComponent(v.name)}" target="_blank">${v.name}</a><span>${v.size_mb} MB</span></li>`).join('')
+    : '<li><span>nenhum ainda</span></li>';
+}
+refreshFiles();
+
+// ---- gerar ----
+$('go').addEventListener('click', async () => {
+  const script = $('script').value.trim();
+  $('err').classList.add('hidden');
+  if (!script) { $('err').textContent = 'Cole o roteiro primeiro.'; $('err').classList.remove('hidden'); return; }
+
+  $('go').disabled = true;
+  $('go').textContent = 'Gerando...';
+  $('progressCard').classList.remove('hidden');
+  $('player').classList.add('hidden');
+  $('dl').classList.add('hidden');
+  $('log').textContent = '';
+
+  let data;
+  try {
+    const res = await fetch('/api/generate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        script,
+        title: $('title').value,
+        voice: $('voice').value,
+        rate: Number($('rate').value),
+        pitch: Number($('pitch').value),
+        background: $('background').value,
+        captions: $('captions').checked,
+        uppercase: $('uppercase').checked,
+        font_size: Number($('fontSize').value),
+        save_defaults: $('saveDefaults').checked
+      })
+    });
+    data = await res.json();
+  } catch (e) {
+    finish();
+    $('err').textContent = 'Nao consegui falar com o servidor. Ele esta rodando? Abra pelo run.bat e use http://127.0.0.1:5000';
+    $('err').classList.remove('hidden');
+    return;
+  }
+  if (data.error) { finish(); $('err').textContent = data.error; $('err').classList.remove('hidden'); return; }
+  poll(data.job_id);
+});
+
+function finish(){
+  $('go').disabled = false;
+  $('go').textContent = 'Gerar video';
+  clearInterval(pollTimer);
+}
+
+function poll(jobId){
+  let misses = 0;
+  pollTimer = setInterval(async () => {
+    let job;
+    try {
+      const res = await fetch('/api/status/' + jobId);
+      job = await res.json();
+      misses = 0;
+    } catch (e) {
+      if (++misses >= 5){
+        finish();
+        $('err').textContent = 'Perdi a conexao com o servidor durante a geracao.';
+        $('err').classList.remove('hidden');
+      }
+      return;
+    }
+    $('barFill').style.width = (job.progress || 0) + '%';
+    $('step').textContent = job.step || '';
+    $('log').textContent = (job.log || []).join('\n');
+    $('log').scrollTop = $('log').scrollHeight;
+
+    if (job.status === 'done'){
+      finish();
+      const url = '/videos/' + encodeURIComponent(job.file);
+      $('player').src = url; $('player').classList.remove('hidden');
+      $('dl').href = url; $('dl').classList.remove('hidden');
+      refreshFiles();
+    } else if (job.status === 'error'){
+      finish();
+      $('err').textContent = job.error;
+      $('err').classList.remove('hidden');
+    }
+  }, 1000);
+}
+</script>
+</body>
+</html>
