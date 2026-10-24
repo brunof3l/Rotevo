@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+assets/temp/
+assets/backgrounds/
+outputs/
+bin/
+/backgrounds/video/

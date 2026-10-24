@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rotevo — transforme roteiros em vídeos narrados</title>
+<meta name="description" content="Rotevo: cole um roteiro e gere um vídeo vertical com narração por IA, fundo de gameplay e legendas sincronizadas.">
+<meta name="color-scheme" content="light dark">
+<style nonce="{{ nonce }}">
+:root{--bg:#f5f4fb;--card:#fff;--ink:#17152b;--mut:#5b5875;--line:#e3e0f2;--ac:#5b3df5;--ac2:#b23cff;--acs:#ece8ff;--ok:#0b7a4b;--err:#b3261e;--r:18px;--sh:0 10px 30px -12px rgba(60,40,160,.25)}
+@media(prefers-color-scheme:dark){:root{--bg:#0f0e1a;--card:#191830;--ink:#f1f0fb;--mut:#a9a6c6;--line:#2c2a4a;--ac:#8d78ff;--ac2:#d27bff;--acs:#262250;--ok:#4cd695;--err:#ff8a80;--sh:0 10px 30px -12px #000}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.skip{position:absolute;left:-999px;top:8px;background:var(--ac);color:#fff;padding:8px 14px;border-radius:8px;z-index:9}.skip:focus{left:8px}
+:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.wrap{max-width:1160px;margin:0 auto;padding:0 20px}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.35rem;letter-spacing:-.02em}
+.brand svg{width:38px;height:38px}
+.btn-ghost{background:none;border:1px solid var(--line);color:var(--mut);padding:8px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:.9rem}
+.btn-ghost:hover{border-color:var(--err);color:var(--err)}
+.hero{padding:34px 0 26px}
+.hero h1{font-size:clamp(2rem,4.6vw,3.2rem);line-height:1.08;margin:0 0 12px;letter-spacing:-.03em;max-width:15em}
+.grad{background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--mut);max-width:40em;margin:0 0 18px;font-size:1.08rem}
+.steps{display:flex;gap:10px;flex-wrap:wrap;padding:0;margin:0;list-style:none}
+.steps li{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:.9rem;color:var(--mut)}
+.steps b{color:var(--ac);margin-right:6px}
+main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px;align-items:start;padding-bottom:40px}
+@media(max-width:940px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;box-shadow:var(--sh);margin-bottom:20px}
+.card h2{font-size:1.1rem;margin:0 0 14px;display:flex;align-items:center;gap:10px}
+.n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--acs);color:var(--ac);font-size:.85rem}
+label{display:block;font-weight:600;font-size:.92rem;margin:12px 0 6px}
+input[type=text],textarea,select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font:inherit}
+textarea{min-height:230px;resize:vertical;line-height:1.5}
+.hint,.stats{color:var(--mut);font-size:.88rem}
+.stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:8px}.stats b{color:var(--ink)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:560px){.row{grid-template-columns:1fr}}
+input[type=range]{width:100%;accent-color:var(--ac)}
+.chk{display:flex;align-items:center;gap:10px;margin:12px 0}.chk input{width:20px;height:20px;accent-color:var(--ac)}.chk label{margin:0;font-weight:500}
+.styles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;border:0;padding:0;margin:0}
+.styles legend{font-weight:600;font-size:.92rem;margin-bottom:8px;padding:0}
+.sty input{position:absolute;opacity:0}
+.sty label{margin:0;cursor:pointer;display:block;border:2px solid var(--line);border-radius:14px;overflow:hidden;font-weight:600;font-size:.88rem;text-align:center;background:var(--bg)}
+.sty input:checked+label{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.sty input:focus-visible+label{outline:3px solid var(--ac);outline-offset:2px}
+.pv{height:92px;display:grid;place-items:center;background:linear-gradient(135deg,#1c3b2a,#3b6b46 45%,#23405c);color:#fff;font:900 1.15rem/1.1 Arial Black,Arial,sans-serif;text-align:center;padding:6px}
+.sty label>span{display:block;padding:8px 6px}
+.pv-classico{text-shadow:-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000}
+.pv-karaoke em{font-style:normal;color:#ffe500}.pv-karaoke{text-shadow:-2px -2px 0 #000,2px 2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000}
+.pv-pop{font-size:1.7rem;color:#ffe500;text-shadow:-3px -3px 0 #000,3px 3px 0 #000,3px -3px 0 #000,-3px 3px 0 #000}
+.pv-caixa{font-family:Arial,sans-serif;font-weight:700}.pv-caixa i{font-style:normal;background:#101010;padding:4px 8px;border-radius:4px}
+.pv-neon{color:#00ffff;text-shadow:0 0 6px #00ffff,0 0 14px #b4005a,0 0 22px #b4005a}
+.pv-minimalista{font:700 .85rem Arial,sans-serif;text-shadow:0 1px 2px #000}
+.go{width:100%;border:0;border-radius:14px;padding:15px;font:inherit;font-weight:700;font-size:1.05rem;color:#fff;background:linear-gradient(90deg,var(--ac),var(--ac2));cursor:pointer;box-shadow:0 10px 24px -10px var(--ac)}
+.go:disabled{opacity:.55;cursor:not-allowed}
+.err{color:var(--err);font-weight:600;margin-top:10px}.hidden{display:none!important}
+.side{position:sticky;top:14px}@media(max-width:940px){.side{position:static}}
+.bar{height:12px;background:var(--acs);border-radius:99px;overflow:hidden;margin:10px 0}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ac2));transition:width .4s}
+#step{font-weight:600}#log{font-size:.82rem;color:var(--mut);max-height:110px;overflow:auto;margin-top:6px}
+video{width:100%;max-height:520px;border-radius:14px;background:#000;margin-top:12px}
+.dl{display:block;text-align:center;margin-top:10px;padding:11px;border-radius:12px;background:var(--acs);color:var(--ac);font-weight:700;text-decoration:none}
+.files{list-style:none;margin:0;padding:0;font-size:.9rem;color:var(--mut)}.files li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}.files a{color:var(--ac);word-break:break-all}
+#offline{background:#fdeceb;color:#8a1c14;padding:10px 16px;text-align:center;font-weight:600}
+footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--mut);font-size:.9rem}
+footer .links{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+footer button{background:none;border:0;color:var(--ac);cursor:pointer;font:inherit;text-decoration:underline;padding:0}
+dialog{max-width:640px;width:calc(100% - 32px);border:1px solid var(--line);border-radius:var(--r);background:var(--card);color:var(--ink);padding:26px}
+dialog::backdrop{background:rgba(10,8,30,.6)}dialog h2{margin-top:0}dialog p,dialog li{color:var(--mut)}
+dialog .x{float:right;background:var(--acs);color:var(--ac);border:0;border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#app">Pular para o conteúdo</a>
+<div id="offline" class="hidden" role="alert">O servidor do Rotevo não está respondendo. Abra o atalho novamente.</div>
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 48 48" role="img" aria-label="Logotipo do Rotevo"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b3df5"/><stop offset="1" stop-color="#b23cff"/></linearGradient></defs><rect width="48" height="48" rx="13" fill="url(#lg)"/><path d="M19 14.5v19l15-9.5z" fill="#fff"/><rect x="8" y="21" width="3" height="6" rx="1.5" fill="#fff" opacity=".7"/><rect x="13" y="18" width="3" height="12" rx="1.5" fill="#fff" opacity=".85"/></svg>
+    <span>Rote<span class="grad">vo</span></span>
+  </div>
+  <button class="btn-ghost" id="shutdown" type="button">Desligar servidor</button>
+</header>
+<section class="hero">
+  <h1>Do roteiro ao vídeo, <span class="grad">em poucos cliques.</span></h1>
+  <p>Cole o seu texto e o Rotevo cria um vídeo vertical (9:16) com narração por inteligência artificial, gameplay no fundo e legendas sincronizadas com a voz.</p>
+  <ol class="steps"><li><b>1</b>Roteiro</li><li><b>2</b>Voz</li><li><b>3</b>Fundo</li><li><b>4</b>Legenda</li><li><b>5</b>Gerar</li></ol>
+</section>
+
+<main id="app">
+<div>
+  <section class="card" aria-labelledby="h1"><h2 id="h1"><span class="n">1</span>Roteiro</h2>
+    <label for="title">Título do vídeo (nome do arquivo)</label>
+    <input type="text" id="title" maxlength="80" autocomplete="off" placeholder="Ex.: A história do último ônibus">
+    <label for="script">Texto da narração</label>
+    <textarea id="script" maxlength="10000" placeholder="Cole seu roteiro aqui. Cada frase vira um bloco de narração e uma legenda."></textarea>
+    <div class="stats" aria-live="polite"><span><b id="chars">0</b> / 10.000 caracteres</span><span><b id="blocks">0</b> blocos</span><span>≈ <b id="dur">0:00</b> de vídeo</span></div>
+  </section>
+
+  <section class="card" aria-labelledby="h2"><h2 id="h2"><span class="n">2</span>Voz</h2>
+    <label for="voice">Voz da narração</label>
+    <select id="voice"><option value="{{ config.tts.voice }}">{{ config.tts.voice }}</option></select>
+    <div class="hint" id="voiceHint"></div>
+    <div class="row">
+      <div><label for="rate">Velocidade: <b id="rateVal">+8%</b></label><input type="range" id="rate" min="-30" max="60" step="2" value="8"></div>
+      <div><label for="pitch">Tom: <b id="pitchVal">+0Hz</b></label><input type="range" id="pitch" min="-12" max="12" step="1" value="0"></div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h3"><h2 id="h3"><span class="n">3</span>Fundo</h2>
+    <label for="background">Vídeo de fundo</label>
+    <select id="background">
+      {% for b in backgrounds %}<option value="{{ b.key }}" {% if b.key == config.background.choice %}selected{% endif %}>{{ b.label }}{% if not b.downloaded %} — baixa no primeiro uso{% endif %}</option>{% endfor %}
+    </select>
+    <p class="hint">Fundos que ainda não foram baixados são baixados na primeira vez em que você os usa.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h4"><h2 id="h4"><span class="n">4</span>Legenda</h2>
+    <div class="chk"><input type="checkbox" id="captions" checked><label for="captions">Mostrar legendas no vídeo</label></div>
+    <fieldset class="styles" id="stylePick"><legend>Estilo da legenda</legend>
+      {% for s in styles %}
+      <div class="sty"><input type="radio" name="cstyle" id="st-{{ s.key }}" value="{{ s.key }}" {% if s.key == config.captions.style %}checked{% endif %}>
+        <label for="st-{{ s.key }}"><div class="pv pv-{{ s.key }}" aria-hidden="true">
+          {% if s.key == 'karaoke' %}Seu <em>roteiro</em><br>aqui{% elif s.key == 'pop' %}ROTEVO{% elif s.key == 'caixa' %}<i>Seu roteiro aqui</i>{% elif s.key == 'minimalista' %}Seu roteiro aqui{% else %}Seu roteiro<br>aqui{% endif %}
+        </div><span>{{ s.label }}</span></label></div>
+      {% endfor %}
+    </fieldset>
+    <label for="fontSize">Tamanho da legenda: <b id="fontVal">76</b></label>
+    <input type="range" id="fontSize" min="48" max="110" step="2" value="{{ config.captions.font_size }}">
+    <div class="chk"><input type="checkbox" id="uppercase"><label for="uppercase">Legendas em MAIÚSCULAS</label></div>
+    <div class="chk"><input type="checkbox" id="saveDefaults"><label for="saveDefaults">Salvar estas escolhas como padrão</label></div>
+  </section>
+</div>
+
+<aside class="side" aria-label="Geração e resultado">
+  <section class="card"><h2><span class="n">5</span>Gerar</h2>
+    <button class="go" id="go" type="button">Gerar vídeo</button>
+    <div class="err hidden" id="err" role="alert"></div>
+    <p class="hint">Um vídeo de cerca de 1 minuto leva em torno de 30 segundos. A narração precisa de internet.</p>
+  </section>
+  <section class="card hidden" id="progressCard" aria-live="polite"><h2>Progresso</h2>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="barBox"><i id="barFill"></i></div>
+    <div id="step"></div><div id="log"></div>
+    <video id="player" class="hidden" controls aria-label="Vídeo gerado"></video>
+    <a class="dl hidden" id="dl" href="#">Baixar o mp4</a>
+  </section>
+  <section class="card"><h2>Vídeos gerados</h2><ul class="files" id="files"><li>Nenhum ainda</li></ul></section>
+</aside>
+</main>
+
+<footer>
+  <div class="links">
+    <button type="button" data-d="d-priv">Privacidade e LGPD</button><button type="button" data-d="d-termos">Termos de uso</button>
+    <button type="button" data-d="d-cookies">Cookies</button><button type="button" data-d="d-dir">Direitos autorais</button><button type="button" data-d="d-acess">Acessibilidade</button>
+  </div>
+  <div>© 2026 Rotevo — projeto acadêmico de Análise e Desenvolvimento de Sistemas (AEMS), desenvolvido por Bruno. Sem fins comerciais.</div>
+</footer>
+</div>
+
+<dialog id="d-priv"><button class="x" type="button" data-close>Fechar</button><h2>Privacidade e LGPD</h2>
+<p>O Rotevo roda no seu próprio computador. Roteiros, vídeos e configurações ficam em arquivos locais e não são enviados a um servidor do projeto, nem usados para perfil ou publicidade.</p>
+<p>Para gerar a voz, o texto de cada frase é enviado ao serviço Edge TTS da Microsoft, e os fundos são baixados do YouTube. Não coloque dados pessoais ou sigilosos no roteiro. Conforme a Lei 13.709/2018 (LGPD), você pode apagar seus dados a qualquer momento excluindo a pasta <code>outputs</code> e o arquivo <code>config.json</code>.</p></dialog>
+<dialog id="d-termos"><button class="x" type="button" data-close>Fechar</button><h2>Termos de uso</h2>
+<p>O Rotevo é um projeto acadêmico oferecido como está, sem garantia de disponibilidade. O resultado depende da internet, do serviço de voz e dos fundos escolhidos, e pode variar.</p>
+<p>Você é responsável pelo conteúdo que cria e publica. É proibido usar a ferramenta para conteúdo ilegal, enganoso, discriminatório ou que viole direitos de terceiros.</p></dialog>
+<dialog id="d-cookies"><button class="x" type="button" data-close>Fechar</button><h2>Cookies</h2>
+<p>Este site não usa cookies, rastreadores nem ferramentas de análise, e não guarda nada no navegador. Por isso não há aviso de consentimento.</p></dialog>
+<dialog id="d-dir"><button class="x" type="button" data-close>Fechar</button><h2>Direitos autorais</h2>
+<p>Os vídeos de gameplay e as músicas de fundo pertencem aos seus criadores (os créditos aparecem na lista de fundos). Confira a licença e a política da plataforma antes de publicar. O Rotevo não transfere nem concede direitos sobre esse material.</p>
+<p>A narração é gerada por voz sintética. Se divulgar o vídeo, informe que a voz é feita por IA.</p></dialog>
+<dialog id="d-acess"><button class="x" type="button" data-close>Fechar</button><h2>Acessibilidade</h2>
+<p>A página funciona só com teclado (Tab, Espaço, Enter e setas), tem foco visível, rótulos em todos os campos, avisos lidos por leitores de tela, contraste adequado, tema claro e escuro automáticos e respeita a opção de reduzir animações.</p></dialog>
+
+<script nonce="{{ nonce }}">
+const $ = (id) => document.getElementById(id);
+const J = {'Content-Type': 'application/json'};
+const fmt = (s) => Math.floor(s / 60) + ':' + String(Math.round(s % 60)).padStart(2, '0');
+const offline = () => $('offline').classList.remove('hidden');
+async function api(url, opts) {
+  try { const r = await fetch(url, opts); return {ok: r.ok, d: await r.json()}; }
+  catch (e) { offline(); return {ok: false, d: {error: 'Sem conexão com o servidor.'}}; }
+}
+function showErr(msg) { const e = $('err'); e.textContent = msg; e.classList.toggle('hidden', !msg); }
+
+document.querySelectorAll('[data-d]').forEach(b => b.addEventListener('click', () => $(b.dataset.d).showModal()));
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
+document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', (e) => { if (e.target === d) d.close(); }));
+
+[['rate', 'rateVal', (v) => (v >= 0 ? '+' : '') + v + '%'], ['pitch', 'pitchVal', (v) => (v >= 0 ? '+' : '') + v + 'Hz'], ['fontSize', 'fontVal', (v) => v]].forEach(([i, o, f]) =>
+  $(i).addEventListener('input', () => { $(o).textContent = f(+$(i).value); }));
+
+let timer;
+$('script').addEventListener('input', () => {
+  clearTimeout(timer);
+  timer = setTimeout(async () => {
+    const r = await api('/api/preview', {method: 'POST', headers: J, body: JSON.stringify({script: $('script').value})});
+    if (!r.ok) return;
+    $('chars').textContent = r.d.chars.toLocaleString('pt-BR'); $('blocks').textContent = r.d.blocks; $('dur').textContent = fmt(r.d.estimated_seconds);
+  }, 300);
+});
+
+async function loadVoices() {
+  const r = await api('/api/voices?lang=pt');
+  if (!r.ok || !r.d.voices.length) { $('voiceHint').textContent = r.d.error || 'Usando a voz padrão.'; return; }
+  const sel = $('voice'), cur = sel.value; sel.replaceChildren();
+  r.d.voices.forEach(v => { const o = document.createElement('option'); o.value = v.name; o.textContent = v.name + ' — ' + v.gender + ' (' + v.locale + ')'; if (v.name === cur) o.selected = true; sel.appendChild(o); });
+}
+async function loadFiles() {
+  const r = await api('/api/outputs'); if (!r.ok) return;
+  const ul = $('files'); ul.replaceChildren();
+  if (!r.d.videos.length) { const li = document.createElement('li'); li.textContent = 'Nenhum ainda'; ul.appendChild(li); return; }
+  r.d.videos.forEach(v => {
+    const li = document.createElement('li'), a = document.createElement('a'), s = document.createElement('span');
+    a.href = '/videos/' + encodeURIComponent(v.name); a.target = '_blank'; a.rel = 'noopener'; a.textContent = v.name; s.textContent = v.size_mb + ' MB';
+    li.append(a, s); ul.appendChild(li);
+  });
+}
+
+async function generate() {
+  showErr('');
+  const style = document.querySelector('input[name=cstyle]:checked');
+  const body = {title: $('title').value, script: $('script').value, voice: $('voice').value, rate: +$('rate').value, pitch: +$('pitch').value,
+    background: $('background').value, captions: $('captions').checked, caption_style: style ? style.value : 'classico',
+    font_size: +$('fontSize').value, uppercase: $('uppercase').checked, save_defaults: $('saveDefaults').checked};
+  $('go').disabled = true;
+  const r = await api('/api/generate', {method: 'POST', headers: J, body: JSON.stringify(body)});
+  if (!r.ok) { showErr(r.d.error || 'Não foi possível iniciar.'); $('go').disabled = false; return; }
+  const card = $('progressCard'); card.classList.remove('hidden'); $('player').classList.add('hidden'); $('dl').classList.add('hidden'); card.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  const poll = setInterval(async () => {
+    const s = await api('/api/status/' + encodeURIComponent(r.d.job_id));
+    if (!s.ok) { clearInterval(poll); showErr(s.d.error || 'Falha ao consultar o andamento.'); $('go').disabled = false; return; }
+    const d = s.d;
+    $('barFill').style.width = d.progress + '%'; $('barBox').setAttribute('aria-valuenow', Math.round(d.progress));
+    $('step').textContent = d.step || ''; $('log').textContent = (d.log || []).slice(-6).join('\n');
+    if (d.status === 'done') {
+      clearInterval(poll); $('go').disabled = false; $('step').textContent = 'Pronto! Seu vídeo foi gerado.';
+      const url = '/videos/' + encodeURIComponent(d.file);
+      $('player').src = url; $('player').classList.remove('hidden');
+      $('dl').href = url + '?dl=1'; $('dl').classList.remove('hidden'); loadFiles();
+    } else if (d.status === 'error') { clearInterval(poll); $('go').disabled = false; showErr(d.error || 'Erro ao gerar o vídeo.'); }
+  }, 1000);
+}
+$('go').addEventListener('click', generate);
+$('shutdown').addEventListener('click', async () => {
+  if (!confirm('Desligar o servidor do Rotevo?')) return;
+  const r = await api('/api/shutdown', {method: 'POST', headers: J, body: '{}'});
+  if (r.ok) document.body.textContent = 'Servidor desligado. Você já pode fechar esta aba.'; else showErr(r.d.error);
+});
+loadVoices(); loadFiles();
+</script>
+</body>
+</html>

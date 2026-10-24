@@ -1,0 +1,23 @@
+{
+  "__comment": "Fundos suportados: chave -> [url do YouTube, nome do arquivo, credito]. Arquivos .mp4 soltos em assets/backgrounds/video/ tambem aparecem na interface automaticamente.",
+  "minecraft": [
+    "https://www.youtube.com/watch?v=n_Dv4JMiwK8",
+    "minecraft-parkour.mp4",
+    "bbswitzer"
+  ],
+  "minecraft-2": [
+    "https://www.youtube.com/watch?v=Pt5_GSKIWQM",
+    "minecraft-2.mp4",
+    "Itslpsn"
+  ],
+  "gta": [
+    "https://www.youtube.com/watch?v=qGa9kWREOnE",
+    "gta-stunt-race.mp4",
+    "Achy Gaming"
+  ],
+  "subway-surfers-like": [
+    "https://www.youtube.com/watch?v=uVKxtdMgJVU",
+    "cluster-truck.mp4",
+    "No Copyright Gameplay"
+  ]
+}
