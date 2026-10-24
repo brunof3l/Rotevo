@@ -82,7 +82,7 @@ def _clamp(value, low, high, default):
 
 
 def _safe_error(err: Exception) -> str:
-    text = str(err).replace(str(ROOT), "<projeto>")
+    text = re.sub(r"\x1b\[[0-9;]*m", "", str(err)).replace(str(ROOT), "<projeto>")
     return (text[:220] or "Erro inesperado ao gerar o vídeo.")
 
 

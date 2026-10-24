@@ -1,6 +1,7 @@
 """Narracao com Edge TTS (vozes neurais da Microsoft, gratis e sem API key)."""
 
 import asyncio
+import inspect
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
@@ -9,6 +10,14 @@ import edge_tts
 # edge-tts devolve tempos em unidades de 100 nanossegundos.
 _TICKS_PER_SECOND = 10_000_000
 _MAX_ATTEMPTS = 3
+
+# edge-tts 7.x entrega tempo por FRASE por padrao; as legendas palavra a palavra
+# precisam de WordBoundary. Versoes antigas nao tem o parametro.
+_EXTRA = (
+    {"boundary": "WordBoundary"}
+    if "boundary" in inspect.signature(edge_tts.Communicate.__init__).parameters
+    else {}
+)
 
 
 class TTSError(RuntimeError):
@@ -22,7 +31,7 @@ async def _synth_one(text: str, out_path: Path, voice: str, rate: str, pitch: st
         words: List[Dict] = []
         audio = bytearray()
         try:
-            communicate = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch, volume=volume)
+            communicate = edge_tts.Communicate(text, voice, rate=rate, pitch=pitch, volume=volume, **_EXTRA)
             async for chunk in communicate.stream():
                 if chunk["type"] == "audio":
                     audio.extend(chunk["data"])

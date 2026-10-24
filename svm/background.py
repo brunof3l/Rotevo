@@ -81,7 +81,7 @@ def ensure_downloaded(
             "Baixando o gameplay de fundo do YouTube (arquivo grande, mas so na primeira vez)..."
         )
 
-    options = {
+    base_options = {
         "format": "bestvideo[height<=1080]/best[height<=1080]",
         # A ORDEM aqui importa: resolucao primeiro, codec por ultimo. Preferir
         # codec antes da resolucao fazia o yt-dlp trazer H.264 em 360p em vez de
@@ -92,20 +92,47 @@ def ensure_downloaded(
         "outtmpl": str(path),
         "retries": 10,
         "fragment_retries": 10,
-        # Baixa em pedacos de 10 MB: download longo e sequencial toma 403 do
-        # YouTube no meio do caminho.
-        "http_chunk_size": 10 * 1024 * 1024,
         "quiet": True,
         "no_warnings": True,
         "noprogress": True,
-        # O cliente "web" toma 403 e o "android" so entrega 360p neste video.
-        # android_vr / tv_embedded expoem 1080p e baixam sem bloqueio.
-        "extractor_args": {
-            "youtube": {"player_client": ["android_vr", "tv_embedded", "android"]}
-        },
+        "color": "never",
     }
-    with yt_dlp.YoutubeDL(options) as ydl:
-        ydl.download([url])
+    # O ffmpeg do projeto fica em bin/ (fora do PATH): o yt-dlp precisa saber onde.
+    try:
+        base_options["ffmpeg_location"] = str(Path(ffmpeg_utils.binary("ffmpeg")).parent)
+    except Exception:
+        pass
+
+    # Varias estrategias, da mais confiavel para a mais generica: o YouTube bloqueia
+    # (403) clientes diferentes em momentos diferentes.
+    attempts = [
+        {"http_chunk_size": 10 * 1024 * 1024,
+         "extractor_args": {"youtube": {"player_client": ["android_vr", "tv_embedded", "android"]}}},
+        {"http_chunk_size": 10 * 1024 * 1024,
+         "extractor_args": {"youtube": {"player_client": ["ios", "web_safari", "mweb"]}}},
+        {},
+    ]
+    last_error: Optional[Exception] = None
+    for number, extra in enumerate(attempts, start=1):
+        try:
+            if on_message and number > 1:
+                on_message(f"Download recusado, tentando outro metodo ({number}/{len(attempts)})...")
+            with yt_dlp.YoutubeDL({**base_options, **extra}) as ydl:
+                ydl.download([url])
+            if path.is_file() and path.stat().st_size > 0:
+                last_error = None
+                break
+        except Exception as err:
+            last_error = err
+            for leftover in path.parent.glob(path.stem + "*.part*"):
+                leftover.unlink(missing_ok=True)
+    if last_error is not None:
+        raise RuntimeError(
+            "O YouTube recusou o download do gameplay (erro 403 ou bloqueio). "
+            "Atualize o yt-dlp (pip install -U yt-dlp) ou baixe um video de gameplay "
+            f"qualquer e coloque o .mp4 na pasta {path.parent} - ele aparece na lista "
+            "de fundos como 'arquivo local'."
+        )
 
     if not path.is_file():
         raise RuntimeError(f"Download do fundo falhou: {url}")

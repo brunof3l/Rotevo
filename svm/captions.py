@@ -69,18 +69,26 @@ def _token_times(segment: Dict, tokens: List[str]) -> List[tuple]:
     return times
 
 
-def _wrap(tokens: List[str], max_chars: int, max_lines: int, active=None, hl=None, base=None) -> str:
-    """Quebra em até max_lines linhas; se `active` for dado, destaca essa palavra."""
+def _layout(tokens: List[str], max_chars: int) -> List[List[int]]:
+    """Quebra gulosa em linhas de ate max_chars (uma palavra maior que isso fica sozinha)."""
     lines: List[List[int]] = [[]]
     size = 0
     for i, token in enumerate(tokens):
         add = len(token) + (1 if lines[-1] else 0)
-        if lines[-1] and size + add > max_chars and len(lines) < max_lines:
+        if lines[-1] and size + add > max_chars:
             lines.append([])
             size = 0
             add = len(token)
         lines[-1].append(i)
         size += add
+    return lines
+
+
+def _wrap(tokens: List[str], max_chars: int, max_lines: int, active=None, hl=None, base=None) -> str:
+    """Junta os tokens em linhas; se `active` for dado, destaca essa palavra."""
+    lines = _layout(tokens, max_chars)
+    if len(lines) > max_lines:  # nao deveria ocorrer (os grupos ja cabem), mas nao perde texto
+        lines = lines[: max_lines - 1] + [[i for line in lines[max_lines - 1:] for i in line]]
     out = []
     for line in lines:
         words = []
@@ -95,7 +103,7 @@ def _wrap(tokens: List[str], max_chars: int, max_lines: int, active=None, hl=Non
 
 def build_groups(segments: List[Dict], cfg: Dict) -> List[Dict]:
     """Agrupa palavras em blocos que cabem na tela, guardando o tempo de cada palavra."""
-    budget = int(cfg["max_chars_per_line"]) * int(cfg["max_lines"])
+    max_chars, max_lines = int(cfg["max_chars_per_line"]), int(cfg["max_lines"])
     groups: List[Dict] = []
     for segment in segments:
         tokens = segment["text"].split()
@@ -104,7 +112,7 @@ def build_groups(segments: List[Dict], cfg: Dict) -> List[Dict]:
         times = _token_times(segment, tokens)
         current = {"tokens": [], "times": []}
         for token, (start, end) in zip(tokens, times):
-            if current["tokens"] and len(" ".join(current["tokens"] + [token])) > budget:
+            if current["tokens"] and len(_layout(current["tokens"] + [token], max_chars)) > max_lines:
                 groups.append(current)
                 current = {"tokens": [], "times": []}
             current["tokens"].append(token)
@@ -150,6 +158,10 @@ def write_ass(segments: List[Dict], cfg: Dict, path: Path, width: int, height: i
         margin_v=int(cfg["margin_v"]),
     )
     glow = "{\\blur3}" if style.get("glow") else ""
+    # Letras de fonte pesada ocupam ~0,62 do tamanho: limita os caracteres por linha
+    # para o texto sempre caber na largura do video (menos as margens laterais).
+    fit = int((width - 120) / (int(cfg["font_size"]) * style["scale"] * 0.62))
+    cfg = {**cfg, "max_chars_per_line": max(8, min(int(cfg["max_chars_per_line"]), fit))}
     lines = [header]
     for ev in _events(build_groups(segments, cfg), style, cfg):
         text = ev["text"].strip()

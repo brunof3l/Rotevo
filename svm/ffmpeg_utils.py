@@ -32,7 +32,7 @@ def binary(name: str) -> str:
             if candidate.is_file():
                 return str(candidate)
     raise FFmpegNotFound(
-        f"Nao encontrei o {name}. Instale o FFmpeg e coloque no PATH, "
+        f"Nao encontrei o {name}. Rode o setup.bat (ele baixa o FFmpeg sozinho) "
         f"ou copie {name}.exe para a pasta bin/ deste projeto."
     )
 
